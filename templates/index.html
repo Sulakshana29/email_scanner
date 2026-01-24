@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Phishing Scanner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .upload-section {
+            text-align: center;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 8px;
+            padding: 40px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            background: #f8f9ff;
+            border-color: #764ba2;
+        }
+
+        .upload-area.drag-over {
+            background: #f0f4ff;
+            border-color: #5a67d8;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s ease;
+        }
+
+        .file-label:hover {
+            background: #5a67d8;
+        }
+
+        .selected-file {
+            margin-top: 15px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .scan-button {
+            background: #764ba2;
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 6px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .scan-button:hover:not(:disabled) {
+            background: #653a8e;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(118, 75, 162, 0.4);
+        }
+
+        .scan-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+        }
+
+        .verdict-badge {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin: 20px 0;
+        }
+
+        .verdict-LOW {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .verdict-MEDIUM {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .verdict-HIGH {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .score-display {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            font-size: 3em;
+            font-weight: bold;
+            color: white;
+        }
+
+        .score-LOW { background: #28a745; }
+        .score-MEDIUM { background: #ffc107; color: #333; }
+        .score-HIGH { background: #dc3545; }
+
+        .section {
+            margin-top: 30px;
+        }
+
+        .section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #555;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            color: #333;
+            word-break: break-all;
+        }
+
+        .issue-item {
+            background: #fff;
+            border-left: 4px solid #ccc;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        .issue-HIGH { border-left-color: #dc3545; }
+        .issue-MEDIUM { border-left-color: #ffc107; }
+        .issue-LOW { border-left-color: #17a2b8; }
+
+        .issue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .severity-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .severity-HIGH { background: #f8d7da; color: #721c24; }
+        .severity-MEDIUM { background: #fff3cd; color: #856404; }
+        .severity-LOW { background: #d1ecf1; color: #0c5460; }
+
+        .url-item, .attachment-item {
+            background: #f8f9fa;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+
+        .flag-badge {
+            display: inline-block;
+            background: #6c757d;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            margin: 2px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #6c757d;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        .back-button {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .back-button:hover {
+            background: #5a6268;
+        }
+
+        .risk-summary {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .reasons-list {
+            margin-top: 15px;
+        }
+
+        .reason-item {
+            background: white;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            border-left: 3px solid #667eea;
+        }
+
+        .reason-category {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 0.9em;
+        }
+
+        .reason-points {
+            float: right;
+            background: #764ba2;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ Email Phishing Scanner</h1>
+            <p>Upload .eml files for safe, local analysis</p>
+        </div>
+
+        <div class="card upload-section" id="uploadSection">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📧</div>
+                <h3>Drop your .eml file here or click to browse</h3>
+                <p style="color: #666; margin-top: 10px;">Maximum file size: 10 MB</p>
+                <input type="file" id="fileInput" accept=".eml" />
+                <label for="fileInput" class="file-label">Choose File</label>
+                <div class="selected-file" id="selectedFile"></div>
+            </div>
+            <button class="scan-button" id="scanButton" disabled>Scan Email</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing email... This is done locally and securely.</p>
+        </div>
+
+        <div class="results" id="results">
+            <button class="back-button" id="backButton">← Scan Another Email</button>
+            
+            <div class="card">
+                <h2 style="text-align: center; color: #333;">Scan Results</h2>
+                <div style="text-align: center;">
+                    <div class="verdict-badge" id="verdictBadge"></div>
+                </div>
+                
+                <div class="score-display">
+                    <div class="score-circle" id="scoreCircle"></div>
+                    <p style="margin-top: 10px; color: #666;">Risk Score</p>
+                </div>
+
+                <div class="risk-summary" id="riskSummary"></div>
+
+                <div class="section" id="reasonsSection">
+                    <h3>Scoring Breakdown</h3>
+                    <div class="reasons-list" id="reasonsList"></div>
+                </div>
+
+                <div class="section">
+                    <h3>Email Headers</h3>
+                    <div class="info-grid" id="headersGrid"></div>
+                </div>
+
+                <div class="section">
+                    <h3>Domain Analysis</h3>
+                    <div class="info-grid" id="domainsGrid"></div>
+                </div>
+
+                <div class="section">
+                    <h3>Authentication Results</h3>
+                    <div class="info-grid" id="authGrid"></div>
+                </div>
+
+                <div class="section" id="urlsSection">
+                    <h3>URLs Found (<span id="urlCount">0</span>)</h3>
+                    <div id="urlsList"></div>
+                </div>
+
+                <div class="section" id="attachmentsSection">
+                    <h3>Attachments (<span id="attachmentCount">0</span>)</h3>
+                    <div id="attachmentsList"></div>
+                </div>
+
+                <div class="section" id="issuesSection">
+                    <h3>All Issues (<span id="issueCount">0</span>)</h3>
+                    <div id="issuesList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const selectedFile = document.getElementById('selectedFile');
+        const scanButton = document.getElementById('scanButton');
+        const uploadSection = document.getElementById('uploadSection');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const backButton = document.getElementById('backButton');
+
+        let currentFile = null;
+
+        // File selection
+        fileInput.addEventListener('change', (e) => {
+            handleFileSelect(e.target.files[0]);
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('drag-over');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            handleFileSelect(e.dataTransfer.files[0]);
+        });
+
+        function handleFileSelect(file) {
+            if (!file) return;
+
+            if (!file.name.toLowerCase().endsWith('.eml')) {
+                alert('Please select a .eml file');
+                return;
+            }
+
+            currentFile = file;
+            selectedFile.textContent = `Selected: ${file.name} (${formatFileSize(file.size)})`;
+            scanButton.disabled = false;
+        }
+
+        // Scan button
+        scanButton.addEventListener('click', async () => {
+            if (!currentFile) return;
+
+            // Show loading
+            uploadSection.style.display = 'none';
+            loading.style.display = 'block';
+            results.style.display = 'none';
+
+            try {
+                const formData = new FormData();
+                formData.append('file', currentFile);
+
+                const response = await fetch('/api/scan', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Scan failed');
+                }
+
+                const data = await response.json();
+                displayResults(data);
+
+                // Show results
+                loading.style.display = 'none';
+                results.style.display = 'block';
+
+            } catch (error) {
+                alert('Error: ' + error.message);
+                loading.style.display = 'none';
+                uploadSection.style.display = 'block';
+            }
+        });
+
+        // Back button
+        backButton.addEventListener('click', () => {
+            results.style.display = 'none';
+            uploadSection.style.display = 'block';
+            currentFile = null;
+            fileInput.value = '';
+            selectedFile.textContent = '';
+            scanButton.disabled = true;
+        });
+
+        function displayResults(data) {
+            // Verdict and score
+            document.getElementById('verdictBadge').className = `verdict-badge verdict-${data.verdict}`;
+            document.getElementById('verdictBadge').textContent = `${data.verdict} RISK`;
+            
+            document.getElementById('scoreCircle').className = `score-circle score-${data.verdict}`;
+            document.getElementById('scoreCircle').textContent = data.score;
+
+            document.getElementById('riskSummary').innerHTML = `<strong>Assessment:</strong> ${data.risk_summary}`;
+
+            // Scoring reasons
+            const reasonsList = document.getElementById('reasonsList');
+            reasonsList.innerHTML = '';
+            if (data.scoring_reasons && data.scoring_reasons.length > 0) {
+                data.scoring_reasons.forEach(reason => {
+                    const div = document.createElement('div');
+                    div.className = 'reason-item';
+                    div.innerHTML = `
+                        <span class="reason-points">+${reason.points}</span>
+                        <div class="reason-category">${reason.category}</div>
+                        <div style="margin-top: 5px;"><strong>${reason.issue}</strong></div>
+                        <div style="margin-top: 5px; color: #666; font-size: 0.9em;">${reason.explanation}</div>
+                    `;
+                    reasonsList.appendChild(div);
+                });
+            } else {
+                reasonsList.innerHTML = '<div class="empty-state">No significant issues detected</div>';
+            }
+
+            // Headers
+            displayInfoGrid('headersGrid', {
+                'From': data.headers.from || 'N/A',
+                'From Name': data.headers.from_name || 'N/A',
+                'To': data.headers.to || 'N/A',
+                'Subject': data.headers.subject || 'N/A',
+                'Date': data.headers.date || 'N/A',
+                'Reply-To': data.headers.reply_to || 'None',
+            });
+
+            // Domains
+            displayInfoGrid('domainsGrid', {
+                'From Domain': data.domains.from_domain || 'N/A',
+                'Reply-To Domain': data.domains.reply_to_domain || 'None',
+                'Return-Path Domain': data.domains.return_path_domain || 'None',
+                'From ↔ Reply-To Match': data.domains.mismatches.from_vs_reply_to ? '❌ Mismatch' : '✅ Match',
+                'From ↔ Return-Path Match': data.domains.mismatches.from_vs_return_path ? '❌ Mismatch' : '✅ Match',
+            });
+
+            // Authentication
+            displayInfoGrid('authGrid', {
+                'SPF': formatAuthResult(data.authentication.spf),
+                'DKIM': formatAuthResult(data.authentication.dkim),
+                'DMARC': formatAuthResult(data.authentication.dmarc),
+                'Received Hops': data.received_chain.hop_count || 0,
+            });
+
+            // URLs
+            document.getElementById('urlCount').textContent = data.urls.count;
+            const urlsList = document.getElementById('urlsList');
+            urlsList.innerHTML = '';
+            if (data.urls.urls && data.urls.urls.length > 0) {
+                data.urls.urls.forEach(url => {
+                    const div = document.createElement('div');
+                    div.className = 'url-item';
+                    div.innerHTML = `
+                        <div style="word-break: break-all; margin-bottom: 8px;"><strong>${escapeHtml(url.url)}</strong></div>
+                        <div style="font-size: 0.9em; color: #666;">Domain: ${escapeHtml(url.domain || 'N/A')}</div>
+                        <div style="font-size: 0.9em; color: #666;">Risk: ${url.risk_level}</div>
+                        ${url.flags && url.flags.length > 0 ? '<div style="margin-top: 5px;">' + url.flags.map(f => `<span class="flag-badge">${f}</span>`).join('') + '</div>' : ''}
+                    `;
+                    urlsList.appendChild(div);
+                });
+            } else {
+                urlsList.innerHTML = '<div class="empty-state">No URLs found</div>';
+            }
+
+            // Attachments
+            document.getElementById('attachmentCount').textContent = data.attachments.count;
+            const attachmentsList = document.getElementById('attachmentsList');
+            attachmentsList.innerHTML = '';
+            if (data.attachments.attachments && data.attachments.attachments.length > 0) {
+                data.attachments.attachments.forEach(att => {
+                    const div = document.createElement('div');
+                    div.className = 'attachment-item';
+                    div.innerHTML = `
+                        <div style="margin-bottom: 8px;"><strong>${escapeHtml(att.filename)}</strong></div>
+                        <div style="font-size: 0.9em; color: #666;">Type: ${escapeHtml(att.content_type)}</div>
+                        <div style="font-size: 0.9em; color: #666;">Size: ${att.size_readable}</div>
+                        <div style="font-size: 0.9em; color: #666;">Risk: ${att.risk_level}</div>
+                        ${att.flags && att.flags.length > 0 ? '<div style="margin-top: 5px;">' + att.flags.map(f => `<span class="flag-badge">${f}</span>`).join('') + '</div>' : ''}
+                    `;
+                    attachmentsList.appendChild(div);
+                });
+            } else {
+                attachmentsList.innerHTML = '<div class="empty-state">No attachments</div>';
+            }
+
+            // All issues
+            document.getElementById('issueCount').textContent = data.all_issues.length;
+            const issuesList = document.getElementById('issuesList');
+            issuesList.innerHTML = '';
+            if (data.all_issues && data.all_issues.length > 0) {
+                data.all_issues.forEach(issue => {
+                    const div = document.createElement('div');
+                    div.className = `issue-item issue-${issue.severity}`;
+                    div.innerHTML = `
+                        <div class="issue-header">
+                            <strong>${issue.type}</strong>
+                            <span class="severity-badge severity-${issue.severity}">${issue.severity}</span>
+                        </div>
+                        <div style="margin-bottom: 5px;">${escapeHtml(issue.description)}</div>
+                        <div style="font-size: 0.9em; color: #666;">Impact: ${escapeHtml(issue.impact)}</div>
+                    `;
+                    issuesList.appendChild(div);
+                });
+            } else {
+                issuesList.innerHTML = '<div class="empty-state">No issues detected</div>';
+            }
+        }
+
+        function displayInfoGrid(elementId, data) {
+            const grid = document.getElementById(elementId);
+            grid.innerHTML = '';
+            Object.entries(data).forEach(([label, value]) => {
+                const div = document.createElement('div');
+                div.className = 'info-item';
+                div.innerHTML = `
+                    <div class="info-label">${label}</div>
+                    <div class="info-value">${escapeHtml(String(value))}</div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        function formatAuthResult(result) {
+            if (result === 'PASS') return '✅ Pass';
+            if (result === 'FAIL') return '❌ Fail';
+            if (result === 'CHECKED') return '⚠️ Checked';
+            return '❓ Not Checked';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
