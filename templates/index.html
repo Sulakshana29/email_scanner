@@ -736,14 +736,14 @@
             <button class="back-button" id="backButton">← Scan Another Email</button>
             
             <div class="card">
-                <h2 style="text-align: center; color: #333;">Scan Results</h2>
+                <h2 style="text-align: center; color: #ef4444;">Scan Results</h2>
                 <div style="text-align: center;">
                     <div class="verdict-badge" id="verdictBadge"></div>
                 </div>
                 
                 <div class="score-display">
                     <div class="score-circle" id="scoreCircle"></div>
-                    <p style="margin-top: 10px; color: #666;">Risk Score</p>
+                    <p style="margin-top: 10px; color: #ef4444;">Risk Score</p>
                 </div>
 
                 <div class="risk-summary" id="riskSummary"></div>
@@ -899,8 +899,8 @@
                     div.innerHTML = `
                         <span class="reason-points">+${reason.points}</span>
                         <div class="reason-category">${reason.category}</div>
-                        <div style="margin-top: 5px;"><strong>${reason.issue}</strong></div>
-                        <div style="margin-top: 5px; color: #666; font-size: 0.9em;">${reason.explanation}</div>
+                        <div style="margin-top: 5px; color: #ef4444;"><strong>${reason.issue}</strong></div>
+                        <div style="margin-top: 5px; color: #f87171; font-size: 0.9em;">${reason.explanation}</div>
                     `;
                     reasonsList.appendChild(div);
                 });
@@ -944,9 +944,9 @@
                     const div = document.createElement('div');
                     div.className = 'url-item';
                     div.innerHTML = `
-                        <div style="word-break: break-all; margin-bottom: 8px;"><strong>${escapeHtml(url.url)}</strong></div>
-                        <div style="font-size: 0.9em; color: #666;">Domain: ${escapeHtml(url.domain || 'N/A')}</div>
-                        <div style="font-size: 0.9em; color: #666;">Risk: ${url.risk_level}</div>
+                        <div style="word-break: break-all; margin-bottom: 8px; color: #ef4444;"><strong>${escapeHtml(url.url)}</strong></div>
+                        <div style="font-size: 0.9em; color: #f87171;">Domain: ${escapeHtml(url.domain || 'N/A')}</div>
+                        <div style="font-size: 0.9em; color: #f87171;">Risk: ${url.risk_level}</div>
                         ${url.flags && url.flags.length > 0 ? '<div style="margin-top: 5px;">' + url.flags.map(f => `<span class="flag-badge">${f}</span>`).join('') + '</div>' : ''}
                     `;
                     urlsList.appendChild(div);
@@ -964,10 +964,10 @@
                     const div = document.createElement('div');
                     div.className = 'attachment-item';
                     div.innerHTML = `
-                        <div style="margin-bottom: 8px;"><strong>${escapeHtml(att.filename)}</strong></div>
-                        <div style="font-size: 0.9em; color: #666;">Type: ${escapeHtml(att.content_type)}</div>
-                        <div style="font-size: 0.9em; color: #666;">Size: ${att.size_readable}</div>
-                        <div style="font-size: 0.9em; color: #666;">Risk: ${att.risk_level}</div>
+                        <div style="margin-bottom: 8px; color: #ef4444;"><strong>${escapeHtml(att.filename)}</strong></div>
+                        <div style="font-size: 0.9em; color: #f87171;">Type: ${escapeHtml(att.content_type)}</div>
+                        <div style="font-size: 0.9em; color: #f87171;">Size: ${att.size_readable}</div>
+                        <div style="font-size: 0.9em; color: #f87171;">Risk: ${att.risk_level}</div>
                         ${att.flags && att.flags.length > 0 ? '<div style="margin-top: 5px;">' + att.flags.map(f => `<span class="flag-badge">${f}</span>`).join('') + '</div>' : ''}
                     `;
                     attachmentsList.appendChild(div);
@@ -986,11 +986,11 @@
                     div.className = `issue-item issue-${issue.severity}`;
                     div.innerHTML = `
                         <div class="issue-header">
-                            <strong>${issue.type}</strong>
+                            <strong style="color: #ef4444;">${issue.type}</strong>
                             <span class="severity-badge severity-${issue.severity}">${issue.severity}</span>
                         </div>
-                        <div style="margin-bottom: 5px;">${escapeHtml(issue.description)}</div>
-                        <div style="font-size: 0.9em; color: #666;">Impact: ${escapeHtml(issue.impact)}</div>
+                        <div style="margin-bottom: 5px; color: #f87171;">${escapeHtml(issue.description)}</div>
+                        <div style="font-size: 0.9em; color: #f87171;">Impact: ${escapeHtml(issue.impact)}</div>
                     `;
                     issuesList.appendChild(div);
                 });
